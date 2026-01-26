@@ -1,0 +1,36 @@
+services:
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=info
+      - HTTP_PORT=8080
+      - GRPC_PORT=9090
+      - ENABLE_GRPC=true
+      - ENABLE_METRICS=true
+      - ENABLE_HEALTHZ=true
+      - ENABLE_DEBUG=true
+      - API_KEY=${API_KEY:-dev-api-key}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - order-network
+
+networks:
+  order-network:
+    driver: bridge
