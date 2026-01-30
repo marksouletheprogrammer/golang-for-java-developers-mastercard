@@ -8,11 +8,12 @@ WORKDIR /app
 
 # TODO: Part 6 - Optimize Docker build for caching
 # Copy go mod files first for better caching
-COPY go.mod go.sum ./
+COPY lab10/go.mod lab10/go.sum ./
+COPY common/ ../common/
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY lab10/ .
 
 # TODO: Part 6 - Build binary with version information
 # Build binary with ldflags to inject version info and strip debug symbols
