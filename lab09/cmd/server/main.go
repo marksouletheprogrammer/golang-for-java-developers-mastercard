@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/pprof"
 	"syscall"
 	"time"
 
@@ -37,7 +40,31 @@ func loadConfig() Config {
 	}
 }
 
+var cpuProfileFile *os.File
+
 func main() {
+	// Parse profiling flags
+	profileMode := flag.String("profile", "", "Enable profiling mode: cpu, mem, or benchmark")
+	flag.Parse()
+
+	// Handle profiling modes
+	switch *profileMode {
+	case "cpu":
+		startCPUProfile()
+		defer stopCPUProfile()
+	case "mem":
+		defer writeMemProfile()
+	case "benchmark":
+		printBenchmarkInfo()
+		return
+	case "":
+		// Normal server mode, continue
+	default:
+		fmt.Printf("Unknown profile mode: %s\n", *profileMode)
+		fmt.Println("Valid modes: cpu, mem, benchmark")
+		os.Exit(1)
+	}
+
 	// Load configuration
 	config := loadConfig()
 
@@ -154,4 +181,81 @@ func main() {
 	fmt.Println("gRPC server stopped gracefully")
 
 	fmt.Println("Service shutdown complete")
+}
+
+// startCPUProfile starts CPU profiling and writes to cpu.prof.
+func startCPUProfile() {
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatalf("Could not create CPU profile: %v", err)
+	}
+	cpuProfileFile = f
+
+	if err := pprof.StartCPUProfile(f); err != nil {
+		f.Close()
+		log.Fatalf("Could not start CPU profile: %v", err)
+	}
+
+	fmt.Println("CPU profiling enabled. Profile will be written to cpu.prof")
+	fmt.Println("Server will run for 30 seconds, then shut down...")
+
+	// Auto-shutdown after 30 seconds for CPU profiling
+	go func() {
+		time.Sleep(30 * time.Second)
+		fmt.Println("\nProfiling complete. Shutting down...")
+		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	}()
+}
+
+// stopCPUProfile stops CPU profiling.
+func stopCPUProfile() {
+	pprof.StopCPUProfile()
+	if cpuProfileFile != nil {
+		cpuProfileFile.Close()
+	}
+	fmt.Println("CPU profile written to cpu.prof")
+	fmt.Println("Analyze with: go tool pprof cpu.prof")
+}
+
+// writeMemProfile writes a memory profile to mem.prof.
+func writeMemProfile() {
+	runtime.GC() // Get up-to-date statistics
+
+	f, err := os.Create("mem.prof")
+	if err != nil {
+		log.Fatalf("Could not create memory profile: %v", err)
+	}
+	defer f.Close()
+
+	if err := pprof.WriteHeapProfile(f); err != nil {
+		log.Fatalf("Could not write memory profile: %v", err)
+	}
+
+	fmt.Println("Memory profile written to mem.prof")
+	fmt.Println("Analyze with: go tool pprof mem.prof")
+}
+
+// printBenchmarkInfo prints benchmark instructions and exits.
+func printBenchmarkInfo() {
+	fmt.Println("=== Benchmark Commands ===")
+	fmt.Println()
+	fmt.Println("Run all benchmarks:")
+	fmt.Println("  go test -bench=. -benchmem ./profiling")
+	fmt.Println()
+	fmt.Println("Run specific benchmark:")
+	fmt.Println("  go test -bench=BenchmarkOrderValidation -benchmem ./profiling")
+	fmt.Println()
+	fmt.Println("Generate CPU profile from benchmark:")
+	fmt.Println("  go test -bench=BenchmarkBatchProcessing -cpuprofile=cpu.prof ./profiling")
+	fmt.Println("  go tool pprof cpu.prof")
+	fmt.Println()
+	fmt.Println("Generate memory profile from benchmark:")
+	fmt.Println("  go test -bench=BenchmarkBatchProcessing -memprofile=mem.prof ./profiling")
+	fmt.Println("  go tool pprof mem.prof")
+	fmt.Println()
+	fmt.Println("Interactive pprof commands:")
+	fmt.Println("  top      - Show top functions")
+	fmt.Println("  list FN  - Show annotated source")
+	fmt.Println("  web      - Generate graph (requires graphviz)")
+	fmt.Println("  quit     - Exit pprof")
 }
