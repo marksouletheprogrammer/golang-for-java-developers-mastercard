@@ -1,8 +1,8 @@
 services:
   order-service:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: lab10/solution/Dockerfile
       args:
         VERSION: ${VERSION:-dev}
         COMMIT: ${COMMIT:-unknown}

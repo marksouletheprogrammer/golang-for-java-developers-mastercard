@@ -7,11 +7,12 @@ RUN apk add --no-cache git make
 WORKDIR /app
 
 # Copy go mod files first for better caching
-COPY go.mod go.sum ./
+COPY lab10/solution/go.mod lab10/solution/go.sum ./
+COPY common/ ../../common/
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY lab10/solution/ .
 
 # Build binary with version information
 ARG VERSION=dev
