@@ -83,7 +83,6 @@ user-validator
 merchant-api
 product-enrichment
 transaction-processor
-server
 order-service
 my-program
 
