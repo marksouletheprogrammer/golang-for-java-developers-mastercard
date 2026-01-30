@@ -69,9 +69,10 @@ docker-build:
 		--build-arg VERSION=$(VERSION) \
 		--build-arg COMMIT=$(COMMIT) \
 		--build-arg BUILD_TIME=$(BUILD_TIME) \
+		-f Dockerfile \
 		-t order-service:$(VERSION) \
 		-t order-service:latest \
-		.
+		../..
 
 docker-run:
 	docker run -p 8080:8080 -p 9090:9090 --env-file .env.example order-service:latest

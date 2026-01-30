@@ -74,7 +74,7 @@ docker-build:
 		--build-arg BUILD_TIME=$(BUILD_TIME) \
 		-t order-service:$(VERSION) \
 		-t order-service:latest \
-		.
+		..
 
 docker-run:
 	docker run -p 8080:8080 -p 9090:9090 --env-file .env.example order-service:latest
