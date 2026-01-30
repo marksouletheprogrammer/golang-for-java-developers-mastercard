@@ -19,7 +19,7 @@ LDFLAGS := -ldflags="-w -s -X main.version=$(VERSION) -X main.commit=$(COMMIT) -
 proto:
 	protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/orders/orders.proto
+		proto/orders.proto
 
 # Clean generated protobuf files
 proto-clean:

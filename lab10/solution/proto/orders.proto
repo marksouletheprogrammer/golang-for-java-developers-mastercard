@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package orders;
 
-option go_package = "lab08/proto/orders";
+option go_package = "lab10/proto";
 
 // OrderStatus represents the current state of an order.
 enum OrderStatus {

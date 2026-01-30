@@ -10,7 +10,7 @@ import (
 	"lab10/internal/domain"
 	"lab10/internal/repository"
 	"lab10/internal/service"
-	pb "lab10/proto/orders"
+	pb "lab10/proto"
 )
 
 // OrderServer implements the gRPC OrderService interface.
@@ -36,12 +36,12 @@ func (s *OrderServer) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 		CustomerID: req.CustomerId,
 		Items:      protoToLineItems(req.Items),
 	}
-	
+
 	// Delegate to service layer
 	if err := s.service.CreateOrder(ctx, order); err != nil {
 		return nil, mapServiceError(err)
 	}
-	
+
 	// Convert domain entity to protobuf message
 	return &pb.CreateOrderResponse{
 		Order: orderToProto(order),
@@ -54,7 +54,7 @@ func (s *OrderServer) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*p
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
-	
+
 	return &pb.GetOrderResponse{
 		Order: orderToProto(order),
 	}, nil
@@ -66,12 +66,12 @@ func (s *OrderServer) ListOrders(ctx context.Context, req *pb.ListOrdersRequest)
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
-	
+
 	protoOrders := make([]*pb.Order, len(orders))
 	for i, order := range orders {
 		protoOrders[i] = orderToProto(order)
 	}
-	
+
 	return &pb.ListOrdersResponse{
 		Orders: protoOrders,
 	}, nil
@@ -80,11 +80,11 @@ func (s *OrderServer) ListOrders(ctx context.Context, req *pb.ListOrdersRequest)
 // UpdateOrderStatus handles gRPC UpdateOrderStatus requests.
 func (s *OrderServer) UpdateOrderStatus(ctx context.Context, req *pb.UpdateOrderStatusRequest) (*pb.UpdateOrderStatusResponse, error) {
 	domainStatus := protoToStatus(req.Status)
-	
+
 	if err := s.service.UpdateOrderStatus(ctx, req.Id, domainStatus); err != nil {
 		return nil, mapServiceError(err)
 	}
-	
+
 	return &pb.UpdateOrderStatusResponse{}, nil
 }
 
@@ -93,7 +93,7 @@ func (s *OrderServer) DeleteOrder(ctx context.Context, req *pb.DeleteOrderReques
 	if err := s.service.DeleteOrder(ctx, req.Id); err != nil {
 		return nil, mapServiceError(err)
 	}
-	
+
 	return &pb.DeleteOrderResponse{}, nil
 }
 
