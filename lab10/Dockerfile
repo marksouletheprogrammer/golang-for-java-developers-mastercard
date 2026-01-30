@@ -9,6 +9,7 @@ WORKDIR /app
 # TODO: Part 6 - Optimize Docker build for caching
 # Copy go mod files first for better caching
 COPY go.mod go.sum ./
+COPY common/ ../common/
 RUN go mod download
 
 # Copy source code
